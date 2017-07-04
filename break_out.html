@@ -1,0 +1,480 @@
+<!-- Browser: Google Chrome is preferred -->
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Breakout</title>
+    <style>* { padding: 0; margin: 0; } canvas { background: #eee; display: block; margin: 0 auto; } p{ font-size: 18px;} #restart { position:absolute; left:190px;top:570px;visibility:hidden;}</style>
+</head>
+<body>
+
+    <div id="readme" style="width:700px; margin: 0 auto;">
+            <h2>Breakout Game</h2>
+            <div>
+                <br>
+                <br>
+                <h3>Game Rules</h3>
+                <br>
+                <ul style="list-style-type:disc; font-size:18px;">
+                  <li>To begin the game, press the "Start Game" button below.</li>
+                  <li>To control the paddle(s), use your mouse or keyboard's left or right button.</li>
+                  <li>Player has 5 lifes (or more) for each game. The game ends when all lifes are used.</li>
+                  <li>The <strong>Timer</strong> counts the time left for player to complete the current level, each level has different time limits.</li>
+                  <li>The <strong>Score</strong> shows the number of bricks you have broke, each brick scores 1 point.</li>
+                  <li>The <strong>Level</strong> shows which level you are currently in, which starts from level 1 and there are 6 levels in this game.</li>
+                </ul>
+                <br>
+                <br>
+                <h3>Special conditions:</h3>
+                <ol style="font-size:18px;">
+                  <li>This game is designed for old people. The game speed may be a bit slower than the normal breakout game and there will be more time and lifes for them.</li>
+                  <li>Player can choose using 1 or 2 paddle(s) for the game. (1 paddle is preferred for old people)</li>
+                  <li>Since this game is designed to help to train the response time or reactions of senior people. Players are free to select the number of lifes given in the game.</li>
+                </ol>
+            </div>
+            <div>
+                <br>
+                <h3>Winning</h3>
+                <p>The player win the game when he <strong>reached and completed</strong> level 6 within the time limit.</p>
+                <br>
+                
+                <h3>Choose number of paddles</h3>
+                <input id="paddleOne" type="radio" name="paddle" value="one" checked/> 1<br>
+                <input id="paddleTwo" type="radio" name="paddle" value="two" /> 2<br>
+                <br>
+                <h3>Choose number of lifes</h3>
+                <select id="lifes">
+                    <option value="5">5</option>
+                    <option value="10">10</option>
+                    <option value="15">15</option>
+                    <option value="99">∞</option>
+                </select>
+                <br><br>
+                <input id="button" type="button" value="Start Game" />
+            </div>
+            
+    </div>
+<canvas id="myCanvas" width="900" height="550" style="display: none;"></canvas>
+
+<script>
+    var canvas = document.getElementById("myCanvas");
+    var ctx = canvas.getContext("2d");
+    var ballRadius = 10;
+    var x = canvas.width / 2;
+    var y = canvas.height - 30;
+    var dx = 3.5;
+    var dy = -3.5;
+    var paddleHeight = 15;
+    var paddleWidth = 100;
+    var paddleX = (canvas.width - paddleWidth) / 2;
+    var rightPressed = false;
+    var leftPressed = false;
+    var brickRowCount = 10;
+    var brickColumnCount = 5;
+    var brickWidth = 75;
+    var brickHeight = 20;
+    var brickPadding = 10;
+    var brickOffsetTop = 30;
+    var brickOffsetLeft = 30;
+    var score = 0;
+    var level = 1;
+    var lifes = 5;
+    var timer = 150 * 60;
+    var bricks = [];
+    var totalBricks = brickRowCount * brickColumnCount;
+    var maxScore = 0;
+    var counter = 0;
+    var paddles = 1;
+    genBricks();
+
+    function removeBricks(x,y){
+      for (i = 0; i < y.length; i++){
+        bricks[x][y[i]].status = 0;
+
+      }
+      totalBricks -= y.length;
+    }
+
+    function genBricks() {
+      for (c = 0; c < brickColumnCount; c++) {
+        bricks[c] = [];
+        for (r = 0; r < brickRowCount; r++) {
+          bricks[c][r] = {
+            x: 0,
+            y: 0,
+            status: 1
+          };
+        }
+      }
+      totalBricks = brickColumnCount*brickRowCount;
+      switch(level){
+        case 2:
+          removeBricks(0,[4,5]);
+          removeBricks(1,[3,6]);
+          removeBricks(2,[2,7]);
+          removeBricks(3,[1,8]);
+          removeBricks(4,[0,9]);
+          break;
+        case 3:
+          removeBricks(0,[1,8]);
+          removeBricks(1,[3,6]);
+          removeBricks(2,[2,3,4,5,6,7]);
+          removeBricks(3,[1,8]);
+          removeBricks(4,[0,9]);
+          break;
+        case 4:
+          removeBricks(1,[0,9]);
+          removeBricks(2,[0,2,4,6,8]);
+          removeBricks(3,[1,3,5,7,9]);
+          removeBricks(4,[0,9]);
+          break;
+        case 5:
+          removeBricks(1,[1,2,3,4,5,6,7,8]);
+          removeBricks(2,[1,8]);
+          removeBricks(3,[1,8]);
+          removeBricks(4,[1,2,3,4,5,6,7,8]);
+          break;
+        case 6:
+          removeBricks(2,[1,8]);
+          removeBricks(1,[0,1,2,3,4,5,6,7,8,9]);
+          removeBricks(0,[2,7]);
+          removeBricks(3,[0,1,2,3,4,5,6,7,8,9]);
+          removeBricks(6,[3,6]);
+          removeBricks(5,[0,1,2,3,4,5,6,7,8,9]);
+          removeBricks(4,[4,5]);
+          break;
+        default:
+          removeBricks(0,[0,1,2,3,4,5,6,7,8,9]);
+          removeBricks(4,[0,9]);
+          removeBricks(1,[0,9]);
+          removeBricks(2,[0,9]);
+          removeBricks(3,[0,9]);
+          break;
+      }
+      maxScore+=totalBricks;
+    }
+
+    document.addEventListener("keydown", keyDownHandler, false);
+    document.addEventListener("keyup", keyUpHandler, false);
+    document.addEventListener("mousemove", mouseMoveHandler, false);
+
+    function keyDownHandler(e) {
+      if (e.keyCode == 39) {
+        rightPressed = true;
+      } else if (e.keyCode == 37) {
+        leftPressed = true;
+      }
+    }
+
+    function keyUpHandler(e) {
+      if (e.keyCode == 39) {
+        rightPressed = false;
+      } else if (e.keyCode == 37) {
+        leftPressed = false;
+      }
+    }
+
+    function mouseMoveHandler(e) {
+      var relativeX = e.clientX - canvas.offsetLeft;
+        if(paddles==1 && (relativeX > paddleWidth / 2 && relativeX < canvas.width - paddleWidth / 2)){
+            paddleX = relativeX - paddleWidth / 2;
+        }
+        else if(paddles==2 && (relativeX > (paddleWidth/2+10)/2 && relativeX < canvas.width - (paddleWidth/2)-80 )){
+            paddleX = relativeX - (paddleWidth/2+10)/2;
+        }
+    }
+
+    function collisionDetection() {
+      for (c = 0; c < brickColumnCount; c++) {
+        for (r = 0; r < brickRowCount; r++) {
+          var b = bricks[c][r];
+          if (b.status == 1) {
+            if (x >= b.x - ballRadius && x <= b.x + brickWidth + ballRadius && y >= b.y - ballRadius && y <= b.y + brickHeight + ballRadius) {
+              if (x >= b.x - ballRadius && x <= b.x + brickWidth + ballRadius) {
+              	dy = -dy;
+              	x += dx;
+              	y += dy;
+              } else {
+              	dx = -dx;
+              	x += dx;
+              	y += dy;
+              }
+              counter++;
+              b.status = 0;
+              score++;
+              if(counter==20){
+                dx += 0.5;
+                dy += 0.5;
+              }
+              if (score == maxScore) {
+                alert("Level " + level +" completed!");
+                level += 1;
+                if (level > 6) {
+                  alert("Congratulations! You WIN!!");
+                  document.location.reload();
+                } else {
+                  switch (level) {
+                    case 2:
+                      x = canvas.width / 2;
+                      y = canvas.height - 30;
+                      dx = 4;
+                      dy = -4;
+                      counter = 0;
+                      brickColumnCount = 5;
+                      brickRowCount = 10;
+                      paddleHeight = 15;
+                      paddleWidth = 95;
+                      timer = 150 * 60;
+                      genBricks();
+                      break;
+                    case 3:
+                      x = canvas.width / 2;
+                      y = canvas.height - 30;
+                      dx = 5;
+                      dy = -5;
+                      counter = 0;
+                      ballRadius = 9;
+                      brickColumnCount = 5;
+                      brickRowCount = 10;
+                      paddleHeight = 15;
+                      paddleWidth = 90;
+                      timer = 150 * 60;
+                      genBricks();
+                      break;
+                    case 4:
+                      x = canvas.width / 2;
+                      y = canvas.height - 30;
+                      dx = 5.5;
+                      dy = -5.5;
+                      counter = 0;
+                      brickWidth = 60;
+                      brickPadding = 27.5;
+                      ballRadius = 8;
+                      brickColumnCount = 6;
+                      brickRowCount = 10;
+                      paddleHeight = 15;
+                      paddleWidth = 85;
+                      timer = 120 * 60;
+                      genBricks();
+                      break;
+                    case 5:
+                      x = canvas.width / 2;
+                      y = canvas.height - 30;
+                      dx = 6;
+                      dy = -6;
+                      ballRadius = 7;
+                      brickColumnCount = 6;
+                      brickRowCount = 10;
+                      paddleHeight = 15;
+                      paddleWidth = 80;
+                      timer = 100 * 60;
+                      genBricks();
+                      break;
+                    case 6:
+                      x = canvas.width / 2;
+                      y = canvas.height - 30;
+                      dx = 6.5;
+                      dy = -6.5;
+                      brickWidth = 50;
+                      brickPadding = 37.5;
+                      ballRadius = 6;
+                      brickColumnCount = 7;
+                      brickRowCount = 10;
+                      paddleHeight = 15;
+                      paddleWidth = 75;
+                      timer = 80 * 60;
+                      genBricks();
+                      break;
+                    default:
+                      break;
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+
+    function drawBall() {
+      ctx.beginPath();
+      ctx.arc(x, y, ballRadius, 0, Math.PI * 2);
+      changeColor();
+      ctx.fill();
+      ctx.closePath();
+    }
+
+    function drawPaddle() {
+      ctx.beginPath();
+      if(paddles==1){
+          ctx.rect(paddleX, canvas.height - paddleHeight, paddleWidth, paddleHeight);
+      }
+      else{
+          ctx.rect(paddleX, canvas.height - paddleHeight, paddleWidth/2+10, paddleHeight);
+          ctx.rect(paddleX+(paddleWidth/2)+60, canvas.height - paddleHeight, paddleWidth/2+10, paddleHeight);
+      }
+      changeColor();
+      ctx.fill();
+      ctx.closePath();
+    }
+
+    function changeColor(){
+      switch(level){
+              case 2:
+                ctx.fillStyle = "#00DD95";
+                break;
+              case 3:
+                ctx.fillStyle = "#9500DD";
+                break;
+              case 4:
+                ctx.fillStyle = "#DD0095";
+                break;
+              case 5:
+                ctx.fillStyle = "#DD9500";
+                break;
+              case 6:
+                ctx.fillStyle = "#95DD00";
+                break;
+              default:
+                ctx.fillStyle = "#0095DD";
+                break;
+            }
+    }
+
+
+    function drawBricks() {
+      for (c = 0; c < brickColumnCount; c++) {
+        for (r = 0; r < brickRowCount; r++) {
+          if (bricks[c][r].status == 1) {
+            var brickX = (r * (brickWidth + brickPadding)) + brickOffsetLeft;
+            var brickY = (c * (brickHeight + brickPadding)) + brickOffsetTop;
+            bricks[c][r].x = brickX;
+            bricks[c][r].y = brickY;
+            ctx.beginPath();
+            ctx.rect(brickX, brickY, brickWidth, brickHeight);
+            changeColor();
+            ctx.fill();
+            ctx.closePath();
+          }
+        }
+      }
+    }
+
+    function drawScore() {
+      ctx.font = "16px Arial";
+      ctx.fillStyle = "#0095DD";
+      ctx.fillText("Score: " + score, (canvas.width - 65) / 3 * 2, 20);
+    }
+
+    function drawLifes() {
+      ctx.font = "16px Arial";
+      ctx.fillStyle = "#0095DD";
+      ctx.fillText("Lifes: " + lifes, canvas.width - 65, 20);
+    }
+
+    function drawTimer() {
+      ctx.font = "16px Arial";
+      ctx.fillStyle = "#0095DD";
+      ctx.fillText("Timer: " + Math.ceil(timer / 90), (canvas.width - 65) / 3, 20);
+    }
+
+    function drawLevel() {
+      ctx.font = "16px Arial";
+      ctx.fillStyle = "#0095DD";
+      ctx.fillText("Level: " + level, 8, 20);
+    }
+
+    var button = document.getElementById('button');
+
+    button.onclick = function() {
+      var div = document.getElementById('readme');
+      if (div.style.display !== 'none') {
+        div.style.display = 'none';
+      } else {
+        div.style.display = 'block';
+      }
+      document.getElementById('myCanvas').style.display = "block";
+      if(document.getElementById("paddleOne").checked){
+          paddles = 1;
+      }
+      else{
+          paddles = 2;
+      }
+      document.getElementById('restart').style = "visibility:visible;";
+      lifes = parseInt(document.getElementById("lifes").value);
+      draw();
+    };
+
+    function restart(){
+      document.location.reload();
+    }
+
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      drawBricks();
+      drawBall();
+      drawPaddle();
+      drawScore();
+      drawLifes();
+      drawTimer();
+      drawLevel();
+      timer--;
+      collisionDetection();
+
+      if (timer == 0) {
+        alert("TIME IS UP");
+        document.location.reload();
+      }
+      
+      if (x >= canvas.width - ballRadius || x <= ballRadius) {
+        dx = -dx;
+      }
+      if (y <= ballRadius) {
+        dy = -dy;
+      } else if (y >= canvas.height - ballRadius - paddleHeight) {
+        if (paddles==1 && (x >= paddleX - ballRadius && x <= paddleX + paddleWidth + ballRadius)) {
+            dy = -dy;
+        }
+        else if(paddles==2 && ((x >= paddleX - ballRadius && x <= paddleX + paddleWidth/2+10 + ballRadius))){
+            dy = -dy;
+        }
+        else if(paddles==2 && ((x >= (paddleX+(paddleWidth/2)+60) - ballRadius && x <= (paddleX+(paddleWidth/2)+60) + paddleWidth/2+10 + ballRadius))){
+            dy = -dy;
+        }
+        else {
+          if(lifes<99){
+              lifes--;
+          }
+          if (!lifes) {
+            alert("GAME OVER");
+            document.location.reload();
+          } else {
+            x = canvas.width / 2;
+            y = canvas.height - 30;
+            paddleX = (canvas.width - paddleWidth) / 2;
+          }
+        }
+      }
+      if(paddles==1){
+            if (rightPressed && paddleX < canvas.width - paddleWidth) {
+                paddleX += 7;
+            } else if (leftPressed && paddleX > 0) {
+                paddleX -= 7;
+            }
+      }
+      else if(paddles==2){
+          if (rightPressed && paddleX+(paddleWidth/2)+60 < canvas.width - paddleWidth/2+10) {
+                paddleX += 7;
+          } else if (leftPressed && paddleX > 0) {
+                paddleX -= 7;
+          }
+      }
+      x += dx;
+      y += dy;
+      requestAnimationFrame(draw);
+    }
+</script>
+<input id="restart" type="button" onclick="restart()" value="RETURN TO START" />
+</body>
+
+</html>
